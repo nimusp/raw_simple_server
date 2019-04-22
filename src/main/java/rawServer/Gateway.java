@@ -5,7 +5,8 @@ import java.io.IOException;
 public class Gateway {
 
     public static void main(String[] args) throws IOException {
-        Service simpleService = Service.getInstance();
+        SimpleRepository repository = new SimpleRepositoryImpl("");
+        Service simpleService = new ServiceImpl(repository);
         simpleService.start();
         try {
             Thread.sleep(2 * 60 * 1000);
