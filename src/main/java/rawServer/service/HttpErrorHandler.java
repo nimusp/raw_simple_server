@@ -19,7 +19,10 @@ public class HttpErrorHandler implements HttpHandler {
             delegate.handle(httpExchange);
         } catch (IOException e) {
             httpExchange.sendResponseHeaders(404, 0);
-            e.printStackTrace();
+            httpExchange.close();
+        } catch (IllegalArgumentException e) {
+            httpExchange.sendResponseHeaders(400, 0);
+        } finally {
             httpExchange.close();
         }
     }
