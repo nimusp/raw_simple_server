@@ -1,4 +1,4 @@
-package rawServer;
+package rawServer.repository;
 
 import java.io.*;
 
@@ -25,14 +25,16 @@ public class SimpleRepositoryImpl implements SimpleRepository {
     @Override
     public void upsert(String key, byte[] value) throws IOException {
         final File file = new File(dir, key);
+        if (!file.exists()) file.createNewFile();
         try (OutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(value);
         }
     }
 
     @Override
-    public void delete(String key) {
+    public void delete(String key) throws FileNotFoundException {
         File file = new File(dir, key);
+        if (!file.exists()) throw new FileNotFoundException("Wrong file key");
         file.delete();
     }
 }

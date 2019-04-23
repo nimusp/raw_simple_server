@@ -1,7 +1,8 @@
-package rawServer;
+package rawServer.service;
 
 import com.sun.istack.internal.NotNull;
 import com.sun.net.httpserver.HttpServer;
+import rawServer.repository.SimpleRepository;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -9,19 +10,17 @@ import java.net.InetSocketAddress;
 public class ServiceImpl implements Service {
 
     private HttpServer server;
-    private SimpleRepository repo;
 
     public ServiceImpl(SimpleRepository repo) throws IOException {
-        this.repo = repo;
         this.server = HttpServer.create(new InetSocketAddress(8080), 0);
         server.createContext("/v0/status", exchange -> {
-            String responseString = "ONLINE";
+            String responseString = "ONLINE\n";
             exchange.sendResponseHeaders(200, responseString.getBytes().length);
             exchange.getResponseBody().write(responseString.getBytes());
             exchange.close();
         });
 
-        server.createContext("/v0/entity", exchange -> {
+        server.createContext("/v0/entity", new HttpErrorHandler(exchange -> {
             final String httpMethod = exchange.getRequestMethod();
             final String id = getEntityId(exchange.getRequestURI().getQuery());
             switch (httpMethod) {
@@ -33,7 +32,7 @@ public class ServiceImpl implements Service {
 
                 case "PUT":
                     int bodyLength = Integer.valueOf(
-                            exchange.getRequestHeaders().getFirst("Content length")
+                            exchange.getRequestHeaders().getFirst("Content-length")
                     );
                     byte[] values = new byte[bodyLength];
                     exchange.getRequestBody().read(values);
@@ -50,19 +49,17 @@ public class ServiceImpl implements Service {
                     exchange.sendResponseHeaders(405, 0);
             }
             exchange.close();
-        });
+        }));
     }
 
     @Override
     public void start() {
         server.start();
-        System.out.println("Service was started");
     }
 
     @Override
     public void stop() {
         server.stop(0);
-        System.out.println("Service was stopped");
     }
 
     @NotNull
